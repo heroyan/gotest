@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/golang/mock v1.6.0
+	github.com/prashantv/gostub v1.1.0 // indirect
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
