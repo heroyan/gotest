@@ -19,9 +19,8 @@ func SelectAll(db *sql.DB) *sql.Rows {
 		fmt.Printf("select err: %+v\n", err)
 		return nil
 	}
-	defer db.Close()
-
-	fmt.Println(rows)
+	// 外部传来的db，就不要close了，有外部进行控制，不要越权
+	//defer db.Close()
 
 	return rows
 }
@@ -39,9 +38,7 @@ func UpdateAll(db *sql.DB) sql.Result {
 		fmt.Printf("update err: %+v\n", err)
 		return nil
 	}
-	defer db.Close()
-
-	fmt.Println(ret.RowsAffected())
+	//defer db.Close()
 
 	return ret
 }
