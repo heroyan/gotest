@@ -12,7 +12,10 @@ import (
 	httpreporter "github.com/openzipkin/zipkin-go/reporter/http"
 )
 
-func doSomeWork(context.Context) {}
+func doSomeWork(ctx context.Context) {
+	log.Println("dome some work")
+	//time.Sleep(time.Second)
+}
 
 func ExampleNewTracer() {
 	// create a reporter to be used by the tracer
@@ -25,8 +28,20 @@ func ExampleNewTracer() {
 		log.Fatalf("unable to create local endpoint: %+v\n", err)
 	}
 
-	// set-up our sampling strategy
-	sampler, err := zipkin.NewBoundarySampler(0.01, time.Now().UnixNano())
+	// set-up the local endpoint for our service
+	endpoint2, err := zipkin.NewEndpoint("demoService2", "localhost:9411")
+	if err != nil {
+		log.Fatalf("unable to create local endpoint: %+v\n", err)
+	}
+
+	// set-up the local endpoint for our service
+	endpoint3, err := zipkin.NewEndpoint("demoService3", "localhost:9411")
+	if err != nil {
+		log.Fatalf("unable to create local endpoint: %+v\n", err)
+	}
+
+	// set-up our sampling strategy, 每一条都上报
+	sampler, err := zipkin.NewBoundarySampler(1.0, time.Now().UnixNano())
 	if err != nil {
 		log.Fatalf("unable to create sampler: %+v\n", err)
 	}
@@ -37,18 +52,37 @@ func ExampleNewTracer() {
 		zipkin.WithLocalEndpoint(endpoint),
 		zipkin.WithSampler(sampler),
 	)
+	// initialize the tracer
+	tracer2, err := zipkin.NewTracer(
+		reporter,
+		zipkin.WithLocalEndpoint(endpoint2),
+		zipkin.WithSampler(sampler),
+	)
+	// initialize the tracer
+	tracer3, err := zipkin.NewTracer(
+		reporter,
+		zipkin.WithLocalEndpoint(endpoint3),
+		zipkin.WithSampler(sampler),
+	)
 	if err != nil {
 		log.Fatalf("unable to create tracer: %+v\n", err)
 	}
 
 	// tracer can now be used to create spans.
 	span := tracer.StartSpan("some_operation")
-	// ... do some work ...
-	span.Finish()
+	doSomeWork(zipkin.NewContext(context.Background(), span))
 
-	childSpan := tracer.StartSpan("some_operation2", zipkin.Parent(span.Context()))
-	// ... do some work ...
+	childSpan := tracer2.StartSpan("some_operation2", zipkin.Parent(span.Context()))
+	doSomeWork(zipkin.NewContext(context.Background(), childSpan))
 	childSpan.Finish()
+
+	childSpan2 := tracer2.StartSpan("some_operation3", zipkin.Parent(childSpan.Context()))
+	doSomeWork(zipkin.NewContext(context.Background(), childSpan2))
+	childSpan2.Finish()
+
+	childSpan3 := tracer3.StartSpan("some_operation4", zipkin.Parent(childSpan2.Context()))
+	doSomeWork(zipkin.NewContext(context.Background(), childSpan3))
+	childSpan3.Finish()
 
 	span.Finish()
 
