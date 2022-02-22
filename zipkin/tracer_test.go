@@ -1,6 +1,8 @@
 package zipkin
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestExample(t *testing.T) {
 	Example()
